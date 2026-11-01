@@ -246,6 +246,18 @@ body>.ad-back .ad-txt{font-size:20px}
 .prog{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-weight:700}
 .prog .bar{width:60%;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
 .prog .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+.pe-ren{width:34px;height:34px;flex:0 0 34px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--panel2);font-size:16px}
+/* v9: Bracket, Duel, Person Edit */
+.tile.g8{background:linear-gradient(135deg,#2a1210,#1a1a30 70%)}
+.tile.g9{background:linear-gradient(135deg,#0d2030,#2a1020 70%)}
+.tile.g10{background:linear-gradient(135deg,#102a20,#1a1a30 70%)}
+.lay-duel{grid-template-columns:1fr 1.15fr 1fr}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pcard{position:relative;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:var(--panel2);text-align:left;padding:0}
+.pcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pcard .pl{position:absolute;left:0;right:0;bottom:0;padding:22% 7% 6%;background:linear-gradient(transparent,rgba(0,0,0,.85));font-weight:800;font-size:13px;line-height:1.1}
+.pcard .pl small{display:block;color:#bbb;font-weight:600;font-size:11px;margin-top:2px}
+.pcard:active{transform:scale(.97)}
 /* v8: Reveal */
 .tile.g7{background:linear-gradient(135deg,#2a1a08,#1a1030 70%)}
 .rv-full{position:absolute;inset:0;background:#000}
@@ -346,6 +358,12 @@ body.gamemode .controls{padding-top:6px}
     <section class="screen" id="s-roul"><div class="pad" id="roulBody"></div></section>
     <section class="screen" id="s-pump"><div class="pad" id="pumpBody"></div></section>
     <section class="screen" id="s-rand"><div class="pad" id="randBody"></div></section>
+    <section class="screen" id="s-duel"><div class="pad" id="duelBody"></div></section>
+    <section class="screen" id="s-pedit"><div class="pad" id="peditBody"></div></section>
+    <section class="screen game" id="s-bracket">
+      <div class="stageWrap"><div class="stage" id="bracketStage"></div></div>
+      <div class="controls" id="bracketCtl"></div>
+    </section>
     <section class="screen game" id="s-reveal">
       <div class="stageWrap"><div class="stage" id="revealStage"></div></div>
       <div class="controls" id="revealCtl"></div>
@@ -651,6 +669,9 @@ const DEF_PROMPTS={
   adPhoto:['Would you wear this? 👀','Rate this fit 1–10','Comment 🔥 if you’d cop','This or nothing.'],
   adMulti:[['Pick your favorite',1,2],['Choose your top 2',2,4],['Pick 3 you’d wear',3,6]],
   blindRank:['Blind rank — no take-backs','Where do they land?','Rank them blind 🙈','Place them — you can’t move them later'],
+  bracket:['Who wins?','Pick the winner','Who advances?','Who takes it?','Only one moves on'],
+  duel:['Who wins this duel?','Pick a side','Duel!','Who’s got it?'],
+  personEdit:['Main character energy','All eyes on them','Today’s spotlight','The full edit','Just them'],
   reveal:['Who’s it going to be? 👀','Guess who…','Blind pick — press Show','Who do you think this is?','Ready to find out?'],
   randomizer:['Which one wins?','Rate the whole grid','Pick your favorite 👀','Which would you pick?','Spin the wheel','What’s the vibe?'],
   pump1:['WARM UP','Starting slow…','Level 1'],
@@ -659,14 +680,14 @@ const DEF_PROMPTS={
 };
 function defaultPrompts(){
   const P={};
-  for(const k of ['wyr','whbSingle','roulette','adPhoto','blindRank','randomizer','reveal','pump1','pump2','pump3'])P[k]=DEF_PROMPTS[k].map(t=>({id:uid(),text:t}));
+  for(const k of ['wyr','whbSingle','roulette','adPhoto','blindRank','randomizer','reveal','bracket','duel','personEdit','pump1','pump2','pump3'])P[k]=DEF_PROMPTS[k].map(t=>({id:uid(),text:t}));
   P.whbMulti=DEF_PROMPTS.whbMulti.map(([t,r])=>({id:uid(),text:t,req:r}));
   P.adMulti=DEF_PROMPTS.adMulti.map(([t,r,c])=>({id:uid(),text:t,req:r,cards:c}));
   return P;
 }
 const DEF_SETTINGS={
   wyrCounts:[2,3,4], whbCounts:[2,4,6], whbMultiChance:40, showNames:true, clipSound:true, cycleMs:1200,
-  roulDur:30, flash:0.4, roulCap:'random', roulChosen:null, rankN:5, pumpDur:50, randLen:60, randShot:5, rand4:50, randSame:false,
+  roulDur:30, flash:0.4, roulCap:'random', roulChosen:null, rankN:5, pumpDur:50, randLen:60, randShot:5, rand4:50, randSame:false, bracketN:8, duelLen:30, duelShot:4, pedLen:30, pedShot:5,
   ads:{enabled:true,photo:true,multi:true,afterNext:true,afterNextChance:25,between:true,betweenChance:35,after:true,afterChance:70,skipDelay:3}
 };
 const DEF_PEOPLE=['Embreigh','Alice Rosenblum','Sydney Sweeney','Sydney Thomas','Millie Bobby Brown','Madison Beer','Ice Spice','Rubi Rose','Sadie McKenna','Kira Pregiato','Sage','Hailey','Bailey','London','Kaybre','Charli','Maci','Gwen','Aubrey','Ava','Faith','Cheyenne','Eden','Brooke','Cat Piscotta','Sommer Ray','Addison Rae','Brooke Monk','Sophie Rain','Darla','Lilly Phillips','Faith Ordway','Chloe Parker','Mia','Sky Bri','Riley Reid','Corinna Kopf','Mkayla','Demitra Kalogras','Ari Kytsya','Megan Fox','Leah Halton','Lana Rhoades','Doja Cat','Ehcico','Persephone Pink','Piper Rockelle','Zoe','Jolie','Sophie','Breckie Hill','Hannah'];
@@ -805,6 +826,13 @@ function otherPhoto(id){
   return show;
 }
 function personCycler(id){return fitImg(otherPhoto(id))}
+function capVs(sc){
+  const [a,b]=sc.vs,out=[];
+  if(a&&b)out.push(h('span',{class:'who'},a),' vs ',h('span',{class:'who'},b),' ');
+  else if(a||b)out.push(h('span',{class:'who'},a||b),' ');
+  if(sc.text)out.push(h('span',null,sc.text));
+  return h('div',{class:'cap k-'+(sc.style||'outline')},out);
+}
 function capEl(text,style,extraCls=''){return h('div',{class:'cap k-'+(style||'outline')+' '+extraCls},h('span',null,text||''))}
 
 /* =========================================================
@@ -827,12 +855,12 @@ function emptyMsg(text,showBtn=true){return h('div',{class:'empty'},h('div',{sty
 /* =========================================================
    Navigation
    ========================================================= */
-const TITLES={reveal:'Reveal',rand:'Randomizer',rank:'Blind Rank',pump:'Pump It',people:'People',person:'Person',home:'Template Maker',wyr:'Would You Rather',whb:'Who Has The Best',roul:'Roulette',player:'Roulette',media:'Media Pool',prompts:'Prompts',ads:'Ad Options',settings:'Settings & Backup'};
+const TITLES={bracket:'Bracket',duel:'Split Screen Duel',pedit:'Person Edit',reveal:'Reveal',rand:'Randomizer',rank:'Blind Rank',pump:'Pump It',people:'People',person:'Person',home:'Template Maker',wyr:'Would You Rather',whb:'Who Has The Best',roul:'Roulette',player:'Roulette',media:'Media Pool',prompts:'Prompts',ads:'Ad Options',settings:'Settings & Backup'};
 const HOOKS={};
 const navStack=['home'];
 function cur(){return navStack[navStack.length-1]}
 function showScreen(name){
-  document.body.classList.toggle('gamemode',['wyr','whb','player','rank','reveal'].includes(name));
+  document.body.classList.toggle('gamemode',['wyr','whb','player','rank','reveal','bracket'].includes(name));
   $$('.screen').forEach(s=>s.classList.toggle('on',s.id==='s-'+name));
   $('#title').textContent=TITLES[name]||'';
   $('#backBtn').style.visibility=name==='home'?'hidden':'visible';
@@ -1042,34 +1070,64 @@ const Ads={open:false,
    Game 2 — Roulette montage generator
    ========================================================= */
 /* RANDOMIZER — ~5s grid shots: 2-grid = 1 photo + 1 clip, 4-grid = 2 photos + 2 clips */
-function genRandomizer(){
-  const set=S.settings,D=set.randLen||60,L0=clamp(set.randShot||5,2,12);
-  const nP=count('photo'),nC=readyClips().length;
-  if(nP<1||nC<1)return null;
+function genGridVideo(o){
+  const nC=readyClips().length;
+  if(o.maxPhotos<1||nC<1)return null;
+  const D=o.D,L0=clamp(o.shot,2,12);
   const startFor=(id,L)=>{const d=(M(id)&&M(id).dur)||0;return d>L+0.3?rand(0,d-L-0.1):0};
   const img=id=>({t:'img',id}),vid=(id,start,audio)=>({t:'vid',id,start,audio:!!audio});
-  const can4=nP>=2;
-  const pr=()=>{const p=promptFrom('randomizer');return p?p.text:''};
-  const sameText=set.randSame?pr():null;
-  // how many shots, then spread the time evenly so every shot is ≈ the chosen length
+  const can4=o.maxPhotos>=2;
+  const pr=()=>{const p=promptFrom(o.cat);return p?p.text:''};
+  const sameText=o.same?pr():null;
   const n=Math.max(1,Math.round(D/L0)),base=D/n;
-  const shots=[];let t=0,last='';
+  const shots=[];let t=0;
   for(let i=0;i<n;i++){
     const dur=i===n-1?D-t:base;
-    let four=can4&&Math.random()*100<(set.rand4==null?50:set.rand4);
-    last=four?'4':'2';
+    const four=can4&&Math.random()*100<o.chance;
     const nPh=four?2:1,nV=four?2:1;
-    const ph=takePhotos(nPh);const vids=[];
+    const ph=o.photosFn(nPh);const vids=[];
     for(let q=0;q<nV;q++){const c=bags.clip.next(vids.map(v=>v.id));vids.push({id:c})}
     // two cells showing the same clip (only 1 clip in the pool) must not be in sync
-    const items=[];let seen={};
-    vids.forEach((v,q)=>{const k=(seen[v.id]=(seen[v.id]||{c:0,s:startFor(v.id,dur)})).c++;const st=seen[v.id].s+k*(((M(v.id)&&M(v.id).dur)||6)/2);items.push(vid(v.id,st,q===0))}); // same clip twice → start half a clip apart
+    const items=[];const seen={};
+    vids.forEach((v,q)=>{const k=(seen[v.id]=(seen[v.id]||{c:0,s:startFor(v.id,dur)})).c++;const st=seen[v.id].s+k*(((M(v.id)&&M(v.id).dur)||6)/2);items.push(vid(v.id,st,q===0))});
     ph.forEach(id=>items.push(img(id)));
     const cells=shuffle(items);
-    // sound: only one clip speaks per shot
-    let spoke=false;cells.forEach(c=>{if(c.t==='vid'){c.audio=!spoke;spoke=true}});
+    let spoke=false;cells.forEach(c=>{if(c.t==='vid'){c.audio=!spoke;spoke=true}}); // one clip speaks per shot
     const layout=four?'grid4':(Math.random()<.5?'stack2':'side2');
-    shots.push({dur,layout,gw:Math.random()<.15,items:cells,at:t,phase:'green',cap:{ids:[],text:sameText!=null?sameText:pr(),style:pick(CAPSTYLES),key:uid()}});
+    shots.push({dur,layout,gw:Math.random()<.15,items:cells,at:t,phase:'green',cap:{ids:o.nameCap?ph.slice():[],text:sameText!=null?sameText:pr(),style:pick(CAPSTYLES),key:uid()}});
+    t+=dur;
+  }
+  return {shots,total:D,caption:'',cap:null};
+}
+function genRandomizer(){
+  const set=S.settings;
+  return genGridVideo({D:set.randLen||60,shot:set.randShot||5,chance:set.rand4==null?50:set.rand4,maxPhotos:count('photo'),photosFn:takePhotos,cat:'randomizer',same:set.randSame,nameCap:false});
+}
+/* PERSON EDIT — only one person's photos, alongside the clips */
+function personPhotos(pid,n){
+  const out=[];for(let i=0;i<n;i++){const id=photoFromEnt('p:'+pid,out);if(id&&!out.includes(id))out.push(id)}
+  return shuffle(out);
+}
+function genPersonEdit(pid){
+  const set=S.settings;
+  return genGridVideo({D:set.pedLen||30,shot:set.pedShot||5,chance:set.rand4==null?50:set.rand4,maxPhotos:photosOf(pid).length,photosFn:n=>personPhotos(pid,n),cat:'personEdit',same:false,nameCap:true});
+}
+/* SPLIT SCREEN DUEL — two people + a clip, new pair every few seconds */
+function genDuel(){
+  const set=S.settings,D=set.duelLen||30,L0=clamp(set.duelShot||4,2,10);
+  const nP=count('photo'),nC=readyClips().length;
+  if(nP<2||nC<1)return null;
+  const startFor=(id,L)=>{const d=(M(id)&&M(id).dur)||0;return d>L+0.3?rand(0,d-L-0.1):0};
+  const n=Math.max(1,Math.round(D/L0)),base=D/n;
+  const shots=[];let t=0;
+  for(let i=0;i<n;i++){
+    const dur=i===n-1?D-t:base;
+    const [a,b]=takePhotos(2);const pa=personOf(a),pb=personOf(b);
+    const c=bags.clip.next();
+    const layout=pick(['duel','stack3']);
+    shots.push({dur,layout,gw:false,at:t,phase:'green',
+      items:[{t:'img',id:a,name:pa?pa.name:''},{t:'vid',id:c,start:startFor(c,dur),audio:true},{t:'img',id:b,name:pb?pb.name:''}],
+      cap:{vs:[pa?pa.name:'',pb?pb.name:''],ids:[],text:(()=>{const p=promptFrom('duel');return p?p.text:''})(),style:pick(CAPSTYLES),key:uid()}});
     t+=dur;
   }
   return {shots,total:D,caption:'',cap:null};
@@ -1233,7 +1291,7 @@ const Player={kind:'roulette',pbar:null,shots:[],total:30,t:0,playing:false,cur:
       const s=$('#s-player');if(s.classList.contains('fs'))s.classList.toggle('hidectl');else this.playing?this.pause():this.play()});
   },
   newMontage(){
-    const m=this.kind==='pump'?genPump():this.kind==='randomizer'?genRandomizer():genMontage();
+    const m=this.kind==='pump'?genPump():this.kind==='randomizer'?genRandomizer():this.kind==='duel'?genDuel():this.kind==='person'?genPersonEdit(this.personId):genMontage();
     if(!m){toast('Add photos or clips to the Media Pool first');return false}
     this.load(m);this.unlock();this.play();return true;
   },
@@ -1274,13 +1332,14 @@ const Player={kind:'roulette',pbar:null,shots:[],total:30,t:0,playing:false,cur:
   samePatch(a,b){
     if(!a||!b||a.layout!==b.layout||a.items.length!==b.items.length)return false;
     for(let k=0;k<a.items.length;k++){const x=a.items[k],y=b.items[k];if(x.t!==y.t)return false;
+      if(x.t==='img'&&(x.name||'')!==(y.name||''))return false;
       if(x.t==='vid'&&(x.id!==y.id||Math.abs((x.start+a.dur)-y.start)>0.05))return false}
     return true;
   },
   enter(i,off){
     {const sc=this.shots[i].cap,ck=sc?sc.key:'';
       if(ck!==this.capKey){this.capKey=ck;if(this.shotCap){this.shotCap.remove();this.shotCap=null}
-        if(sc){this.shotCap=capWho(sc.text,sc.ids,sc.style);$('#pStage').append(this.shotCap)}
+        if(sc){this.shotCap=sc.vs?capVs(sc):capWho(sc.text,sc.ids,sc.style);$('#pStage').append(this.shotCap)}
         if(this.capEl)this.capEl.style.visibility=sc?'hidden':''}}
     const shot=this.shots[i],prev=this.shots[this.cur];
     this.kb=null;
@@ -1293,7 +1352,7 @@ const Player={kind:'roulette',pbar:null,shots:[],total:30,t:0,playing:false,cur:
     const taken=new Set();
     shot.items.forEach((it,k)=>{
       const slot=h('div',{class:'slot s'+k});
-      if(it.t==='img'){const im=fitImg(it.id);this.applyImg(im,it);slot.append(im)}
+      if(it.t==='img'){const im=fitImg(it.id);this.applyImg(im,it);slot.append(im);if(it.name&&S.settings.showNames)slot.append(h('div',{class:'nm'},it.name))}
       else{const v=this.getVid(i,it.id,it.start+off,taken);taken.add(v);v._prep=-1;v._audio=it.audio;v._wantSound=it.audio;
         v.muted=!it.audio||this.forceMute;this.loadV(v,it.id,it.start+off);slot.append(VR.canvas(v))}
       lay.append(slot);
@@ -1415,6 +1474,9 @@ const CAT_INFO={
   adPhoto:['Photo ad prompts','Text shown on photo pop-up ads.'],
   adMulti:['Card ad prompts (multiple choice)','“pick” = cards to select, “cards” = cards shown.'],
   blindRank:['Blind Rank prompts','Shown above the cards. The current person’s name appears in front of it.'],
+  bracket:['Bracket prompts','Shown above each matchup. The tapped person’s name appears in front of it.'],
+  duel:['Split Screen Duel prompts','Shown with “name vs name” on each shot.'],
+  personEdit:['Person Edit prompts','Shown on each shot, with the person’s name in front.'],
   reveal:['Reveal prompts','The question shown over the video. After you press Show, the person’s name appears in front of it.'],
   randomizer:['Randomizer prompts','Shown on screen during each grid shot.'],
   pump1:['Pump It — 🟢 slow part','Shown during the slow start, with the person’s name in front.'],
@@ -1429,9 +1491,9 @@ let promptsFocus=null;
 function openPrompts(which){promptsFocus=which;go('prompts')}
 HOOKS.prompts={show(){
   const b=$('#promptsBody');const f=promptsFocus;
-  const order={wyr:['wyr'],whb:['whbSingle','whbMulti'],roulette:['roulette'],ads:['adPhoto','adMulti'],rank:['blindRank'],pump:['pump1','pump2','pump3'],rand:['randomizer'],reveal:['reveal']};
+  const order={wyr:['wyr'],whb:['whbSingle','whbMulti'],roulette:['roulette'],ads:['adPhoto','adMulti'],rank:['blindRank'],pump:['pump1','pump2','pump3'],rand:['randomizer'],reveal:['reveal'],bracket:['bracket'],duel:['duel'],pedit:['personEdit']};
   const first=f?order[f]:[];
-  const all=['wyr','whbSingle','whbMulti','blindRank','randomizer','reveal','roulette','pump1','pump2','pump3','adPhoto','adMulti'];
+  const all=['wyr','whbSingle','whbMulti','blindRank','bracket','randomizer','reveal','duel','personEdit','roulette','pump1','pump2','pump3','adPhoto','adMulti'];
   const rest=all.filter(c=>!first.includes(c));
   b.replaceChildren(h('div',{class:'muted small',style:'margin:0 2px 12px'},'Everything saves automatically. Edit any prompt by tapping its text.'),
     ...first.map(c=>section(c,true)),...rest.map(c=>section(c,!f)));
@@ -1486,6 +1548,9 @@ HOOKS.home={show(){
       tile('🏆','Who Has The Best','2 / 4 / 6 photos',()=>{WHB.st=null;go('whb')},'big g3'),
       tile('🙈','Blind Rank',`Rank ${S.settings.rankN||5} people, no take-backs`,()=>{RANK.st=null;go('rank')},'big g4'),
       tile('💪','Pump It',`${S.settings.pumpDur||50}s slow → fast edit`,()=>go('pump'),'big g5'),
+      tile('🏅','Bracket',`${S.settings.bracketN||8} people, one champion`,()=>{BRACKET.st=null;go('bracket')},'big g8'),
+      tile('⚔️','Split Screen Duel',`${S.settings.duelLen||30}s of two-person duels`,()=>go('duel'),'big g9'),
+      tile('🎞','Person Edit','Pick one person — a video of only them',()=>go('pedit'),'big g10'),
       tile('🎭','Reveal','Video + a question — press Show to find out who',()=>{REVEAL.st=null;go('reveal')},'big g7'),
       tile('🎲','Randomizer',`${S.settings.randLen||60}s of random photo + clip grids`,()=>go('rand'),'big g6'),
     ),
@@ -1553,6 +1618,129 @@ HOOKS.pump={show(){
       h('div',{class:'muted small',style:'margin-bottom:10px'},`Slow: ${cnt('pump1')} · Medium: ${cnt('pump2')} · Hard: ${cnt('pump3')} prompts. One is picked at random for each phase. In the slow part, the person’s name shows in front of it.`),
       btn('✎ Edit Pump It prompts',()=>openPrompts('pump'),'full')));
 }};
+
+/* =========================================================
+   Split Screen Duel setup + Person Edit picker
+   ========================================================= */
+HOOKS.duel={show(){
+  const b=$('#duelBody');const set=S.settings;
+  const nP=count('photo'),nC=readyClips().length;
+  const genBtn=btn('⚔️ Generate Duel',()=>{
+    if(nP<2||nC<1){toast('Add at least 2 photos and 1 clip first');go('media');return}
+    Player.kind='duel';HOOKS.player._fromGen=true;go('player');Player.newMontage();
+  },'primary full');genBtn.style.height='58px';genBtn.style.fontSize='18px';
+  const info=h('div',{class:'muted small',style:'margin-top:6px'});
+  const upd=()=>{const n=Math.max(1,Math.round((set.duelLen||30)/(set.duelShot||4)));info.textContent=`About ${n} duels of ${((set.duelLen||30)/n).toFixed(1)}s each.`};upd();
+  b.replaceChildren(
+    nP<2||nC<1?h('div',{class:'banner'},nC<1&&count('clip')?'Your clips are still being prepared — give it a moment.':'Add at least 2 photos and 1 clip in the Media Pool first.'):null,
+    genBtn,
+    h('div',{class:'muted small',style:'text-align:center;margin:8px 0 4px'},'Two different people and a clip on every shot, with “name vs name” and a prompt on top.'),
+    previousBtn('duel'),
+    h('h2',null,'Video'),
+    h('div',{class:'card-p'},
+      sliderRow('Video length',15,90,5,()=>set.duelLen||30,v=>{set.duelLen=v;upd()},v=>v+'s'),
+      sliderRow('Time per duel',2,8,0.5,()=>set.duelShot||4,v=>{set.duelShot=v;upd()},v=>(+v).toFixed(1)+'s'),
+      info),
+    h('h2',null,'Prompts'),
+    h('div',{class:'card-p'},promptEditor('duel',{placeholder:'Write a duel prompt…'})));
+}};
+HOOKS.pedit={show(){
+  const b=$('#peditBody');
+  const ppl=S.people.filter(p=>photosOf(p.id).length).sort(byName);
+  const nC=readyClips().length;
+  const q=h('input',{type:'text',class:'tx',placeholder:'Search people…',style:'width:100%;margin-bottom:12px'});
+  const grid=h('div',{class:'pgrid'});
+  const go1=pid=>{
+    if(!nC){toast('Add at least 1 clip first');go('media');return}
+    Player.kind='person';Player.personId=pid;HOOKS.player._fromGen=true;go('player');Player.newMontage();
+  };
+  const draw=()=>{const t=q.value.trim().toLowerCase();grid.replaceChildren();
+    const list=ppl.filter(p=>!t||p.name.toLowerCase().includes(t));
+    list.forEach(p=>{const ph=photosOf(p.id);const m=pick(ph);
+      grid.append(h('button',{class:'pcard',onclick:()=>go1(p.id)},h('img',{src:m.thumb||m.url,alt:'',loading:'lazy'}),h('div',{class:'pl'},p.name,h('small',null,ph.length+(ph.length===1?' photo':' photos')))))});
+    if(!list.length)grid.append(h('div',{class:'muted small',style:'grid-column:1/-1;padding:16px 2px'},ppl.length?'No one matches that.':'No one has photos yet. Open People and add photos to a person first.'))};
+  q.addEventListener('input',draw);draw();
+  b.replaceChildren(
+    !nC?h('div',{class:'banner'},count('clip')?'Your clips are still being prepared — give it a moment.':'Add at least 1 clip in the Media Pool — each video plays clips next to the photos.'):null,
+    h('div',{class:'muted small',style:'margin:0 2px 10px'},'Tap a person to make a grid video of only them, alongside your clips.'),
+    q,grid,
+    h('h2',null,'Video'),
+    h('div',{class:'card-p'},
+      sliderRow('Video length',10,90,5,()=>S.settings.pedLen||30,v=>S.settings.pedLen=v,v=>v+'s'),
+      sliderRow('Time per shot',2,10,0.5,()=>S.settings.pedShot||5,v=>S.settings.pedShot=v,v=>(+v).toFixed(1)+'s')),
+    h('h2',null,'Prompts'),
+    h('div',{class:'card-p'},h('div',{class:'muted small',style:'margin-bottom:10px'},'Shown on each shot, with the person’s name in front.'),
+      promptEditor('personEdit',{placeholder:'Write a prompt…'})));
+}};
+
+/* =========================================================
+   Bracket — 1v1 matchups until one champion is left
+   ========================================================= */
+const BRF=new Flip();
+const BRACKET={st:null,busy:false,
+  label(n){return n>=16?'Round of 16':n===8?'Quarterfinals':n===4?'Semifinals':'Final'},
+  newGame(){
+    const stage=$('#bracketStage');const ents=entities();
+    if(ents.length<4){this.st=null;BRF.pause();stage.replaceChildren(emptyMsg('Add photos of at least 4 people to play Bracket.'));this.ctl();return}
+    const N=[16,8,4].find(x=>x<=Math.min(S.settings.bracketN||8,ents.length));
+    const picks=[];for(let i=0;i<N;i++){const e=entBag.next(picks);if(!e||picks.includes(e))break;picks.push(e)}
+    if(picks.length<N)picks.push(...shuffle(ents.filter(x=>!picks.includes(x))).slice(0,N-picks.length));
+    this.st={N,round:shuffle(picks),winners:[],m:0,sel:-1,phase:'pick',cap:pick(CAPSTYLES),prompt:'',pair:null,champ:null,champPhoto:null};
+    this.busy=false;this.setMatch();
+  },
+  setMatch(){
+    const s=this.st,a=s.round[s.m*2],b=s.round[s.m*2+1];
+    const pr=promptFrom('bracket');s.prompt=pr?pr.text:'';
+    s.pair=[{ent:a,photo:photoFromEnt(a,[])},{ent:b,photo:photoFromEnt(b,[])}];s.sel=-1;s.phase='pick';
+    this.render();this.ctl();
+  },
+  render(){
+    const s=this.st,stage=$('#bracketStage');if(!s)return;$('#s-bracket').scrollTop=0;
+    if(s.phase==='end'){
+      const ph=fitImg(s.champPhoto),nm=nameTag(s.champPhoto);
+      this.capEl=capWho('👑 CHAMPION',[s.champPhoto],s.cap);
+      if(readyClips().length){
+        const c=bags.clip.next();if(BRF._mid!==c){BRF.setClip(c);BRF.currentTime=0}
+        stage.replaceChildren(h('div',{class:'res2'},h('div',{class:'cell'},VR.canvas(BRF)),h('div',{class:'cell rv-photo'},ph,nm)),this.capEl);
+        BRF._wantSound=true;BRF.muted=gvMuted;BRF.play();
+      }else stage.replaceChildren(h('div',{class:'rk-end',style:'top:0;grid-template-rows:1fr'},h('div',{class:'rk-cell'},ph,nm)),this.capEl);
+      return;
+    }
+    this.capEl=capWho(s.prompt,s.sel>=0?[s.pair[s.sel].photo]:[],s.cap);
+    const head=h('div',{class:'whb-head'},this.capEl);
+    const g=h('div',{class:'whb-grid n2'});
+    s.pair.forEach((pp,i)=>g.append(h('div',{class:'card'+(i===s.sel?' sel':''),onclick:()=>this.pick(i)},fitImg(pp.photo),nameTag(pp.photo))));
+    stage.replaceChildren(head,g);
+  },
+  pick(i){
+    const s=this.st;if(!s||s.phase!=='pick'||this.busy)return;
+    s.sel=i;$$('#bracketStage .card').forEach((c,j)=>c.classList.toggle('sel',j===i));
+    const nc=capWho(s.prompt,[s.pair[i].photo],s.cap);this.capEl.replaceWith(nc);this.capEl=nc;this.ctl();
+  },
+  confirm(){
+    const s=this.st;if(!s||s.phase!=='pick'||s.sel<0||this.busy||Ads.open)return;
+    this.busy=true;s.winners.push(s.pair[s.sel].ent);this.ctl();
+    setTimeout(()=>{if(this.st!==s)return;Ads.afterNext().then(()=>{this.busy=false;if(this.st===s)this.advance()})},450);
+  },
+  advance(){
+    const s=this.st;s.m++;
+    if(s.m*2>=s.round.length){
+      if(s.winners.length===1){s.phase='end';s.champ=s.winners[0];s.champPhoto=photoFromEnt(s.champ,[]);this.render();this.ctl();return}
+      s.round=s.winners;s.winners=[];s.m=0;
+    }
+    this.setMatch();
+  },
+  ctl(){
+    const c=$('#bracketCtl'),s=this.st;
+    if(!s){c.replaceChildren(btn('🖼 Media Pool',()=>go('media'),'primary'));return}
+    if(s.phase==='end'){c.replaceChildren(btn('✎',()=>openPrompts('bracket'),'sq'),btn('🏅 New bracket',()=>{if(!Ads.open&&!this.busy){BRF.pause();Ads.between().then(()=>this.newGame())}},'primary'));return}
+    const total=s.round.length/2;
+    c.replaceChildren(btn('✎',()=>openPrompts('bracket'),'sq'),
+      h('div',{class:'ctl-info'},h('b',null,this.label(s.round.length)),`${s.m+1} / ${total}`),
+      btn('Next ▶',()=>this.confirm(),'primary'+(s.sel<0||this.busy?' disabled':'')),btn('🔀',()=>{if(!Ads.open&&!this.busy)this.newGame()},'sq'));
+  },
+};
+HOOKS.bracket={show(){if(!BRACKET.st)BRACKET.newGame();else{BRACKET.render();BRACKET.ctl()}},hide(){BRF.pause()}};
 
 /* =========================================================
    Reveal — a clip plays with a question; press Show to find out who it is
@@ -1840,6 +2028,16 @@ HOOKS.media={show(){
 /* =========================================================
    People
    ========================================================= */
+function renamePerson(p,after){
+  const inp=h('input',{type:'text',class:'tx',value:p.name,style:'width:100%',enterkeyhint:'done'});
+  modal('Rename',p.photoCount?null:'This changes the name everywhere. Their photos stay with them.',[{label:'Cancel',value:null},{label:'Save',value:'ok',cls:'primary'}],inp).then(v=>{
+    if(v!=='ok')return;
+    const nm=inp.value.trim().replace(/\s+/g,' ');if(!nm){toast('Name can’t be empty');return}
+    if(S.people.some(x=>x!==p&&x.name.toLowerCase()===nm.toLowerCase())){toast('Someone is already called “'+nm+'”');return}
+    p.name=nm;markDirty();toast('✓ Renamed to '+nm);after&&after();
+  });
+  setTimeout(()=>{try{inp.focus();inp.select()}catch(e){}},80);
+}
 let curPerson=null;
 function openPerson(pid){curPerson=pid;go('person')}
 HOOKS.people={show(){
@@ -1851,7 +2049,7 @@ HOOKS.people={show(){
   const draw=()=>{const t=q.value.trim().toLowerCase();list.replaceChildren();
     const ppl=S.people.filter(p=>!t||p.name.toLowerCase().includes(t)).sort(byName);
     if(!ppl.length)list.append(h('div',{class:'muted small',style:'padding:10px 4px'},t?'No match — tap “+ Add” to add this person.':'No people yet.'));
-    ppl.forEach(p=>{const n=photosOf(p.id).length;list.append(h('button',{class:'pr',onclick:()=>openPerson(p.id)},avatar(p),h('span',{class:'pn'},p.name),h('span',{class:'pc'},n+(n===1?' photo':' photos')),h('span',{class:'muted',style:'font-size:20px'},'›')))})};
+    ppl.forEach(pp=>{const p=pp;const n=photosOf(p.id).length;list.append(h('button',{class:'pr',onclick:()=>openPerson(p.id)},avatar(p),h('span',{class:'pn'},p.name),h('span',{class:'pc'},n+(n===1?' photo':' photos')),h('span',{class:'pe-ren',onclick:e=>{e.stopPropagation();renamePerson(pp,draw)}},'✎'),h('span',{class:'muted',style:'font-size:20px'},'›')))})};
   const add=()=>{const v=q.value.trim();if(!v){q.focus();return}const before=S.people.length;const p=addPerson(v);q.value='';draw();toast(S.people.length>before?'✓ Added '+p.name:p.name+' is already on the list')};
   q.addEventListener('input',draw);q.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();add()}});
   b.replaceChildren(h('div',{class:'pe-add'},q,btn('+ Add',add,'primary nofx')),
@@ -1977,6 +2175,7 @@ HOOKS.settings={async show(){
       chipRow('Would You Rather cards',[2,3,4],set.wyrCounts),
       chipRow('Who Has The Best photos',[2,4,6],set.whbCounts),
       singleChipRow('Blind Rank slots',[3,4,5,6],()=>set.rankN||5,v=>set.rankN=v),
+      singleChipRow('Bracket size',[4,8,16],()=>set.bracketN||8,v=>set.bracketN=v),
       sliderRow('Multiple-choice rounds (Who Has The Best)',0,100,5,()=>set.whbMultiChance,v=>set.whbMultiChance=v,v=>v+'%')),
     h('h2',null,'Danger zone'),
     h('div',{class:'card-p',style:'display:grid;gap:8px'},
