@@ -247,6 +247,32 @@ body>.ad-back .ad-txt{font-size:20px}
 .prog .bar{width:60%;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
 .prog .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
 .pe-ren{width:34px;height:34px;flex:0 0 34px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--panel2);font-size:16px}
+/* v12: For You feed */
+.tile.g11{background:linear-gradient(135deg,#2a0f24,#0f1a2a 70%)}
+.lay-t12{grid-template-columns:1fr 1fr;grid-template-rows:1.25fr 1fr}
+.lay-t12>.slot:first-child{grid-column:1/3}
+.lay-l12{grid-template-columns:1.25fr 1fr;grid-template-rows:1fr 1fr}
+.lay-l12>.slot:first-child{grid-row:1/3}
+.fpage{position:absolute;inset:0;background:#000;overflow:hidden;will-change:transform}
+.fpage .lay{inset:0}
+.fpage .kb{animation:fkb 9s ease-out forwards}
+@keyframes fkb{from{transform:scale(1)}to{transform:scale(1.08)}}
+.fui{position:absolute;inset:0;z-index:6;pointer-events:none}
+.fshade{position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(transparent,rgba(0,0,0,.62))}
+.ftop{position:absolute;left:0;right:0;top:10px;text-align:center;font-weight:800;font-size:15px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.ftop span{opacity:.6;margin-right:16px}.ftop b{border-bottom:2px solid #fff;padding-bottom:3px}
+.fmeta{position:absolute;left:12px;right:84px;bottom:calc(18px + var(--sab));color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.fmeta .fh{font-weight:800;font-size:calc(var(--sw,360px) * .043);margin-bottom:4px}
+.fmeta .fc{font-size:calc(var(--sw,360px) * .038);line-height:1.25}
+.fbar{position:absolute;right:8px;bottom:calc(24px + var(--sab));display:flex;flex-direction:column;align-items:center;gap:16px;pointer-events:auto}
+.fbtn{display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;font-size:11px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.8);background:none}
+.fbtn i{font-style:normal;font-size:30px;line-height:1;filter:drop-shadow(0 1px 4px rgba(0,0,0,.7))}
+.fbtn.on i{color:#ff2d55}
+.fav{width:46px;height:46px;border-radius:50%;border:2px solid #fff;overflow:hidden;background:#333;position:relative;pointer-events:none;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px}
+.fav img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.fheart{position:absolute;z-index:7;font-size:90px;transform:translate(-50%,-50%);pointer-events:none;animation:fheart .8s ease-out forwards;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))}
+@keyframes fheart{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+.fpause{position:absolute;left:50%;top:50%;z-index:7;transform:translate(-50%,-50%);font-size:70px;color:rgba(255,255,255,.85);pointer-events:none;text-shadow:0 2px 14px rgba(0,0,0,.6)}
 /* v10: Gallery + favorites */
 .g-top{position:sticky;top:0;z-index:3;background:var(--bg);padding:2px 0 10px;display:flex;gap:8px;align-items:center}
 .g-top .btn{flex:0 0 auto}
@@ -379,6 +405,9 @@ body.gamemode .controls{padding-top:6px}
     <section class="screen" id="s-rand"><div class="pad" id="randBody"></div></section>
     <section class="screen" id="s-duel"><div class="pad" id="duelBody"></div></section>
     <section class="screen" id="s-gallery"><div class="pad" id="galleryBody"></div></section>
+    <section class="screen game" id="s-feed">
+      <div class="stageWrap"><div class="stage" id="feedStage"></div></div>
+    </section>
     <section class="screen" id="s-pedit"><div class="pad" id="peditBody"></div></section>
     <section class="screen game" id="s-bracket">
       <div class="stageWrap"><div class="stage" id="bracketStage"></div></div>
@@ -690,6 +719,7 @@ const DEF_PROMPTS={
   adPhoto:['Would you wear this? 👀','Rate this fit 1–10','Comment 🔥 if you’d cop','This or nothing.'],
   adMulti:[['Pick your favorite',1,2],['Choose your top 2',2,4],['Pick 3 you’d wear',3,6]],
   blindRank:['Blind rank — no take-backs','Where do they land?','Rank them blind 🙈','Place them — you can’t move them later'],
+  feed:['wait for it… 👀','this one’s for the algorithm','POV: you can’t stop scrolling','don’t scroll yet','tell me this isn’t a vibe','save this for later ✨'],
   bracket:['Who wins?','Pick the winner','Who advances?','Who takes it?','Only one moves on'],
   duel:['Who wins this duel?','Pick a side','Duel!','Who’s got it?'],
   personEdit:['Main character energy','All eyes on them','Today’s spotlight','The full edit','Just them'],
@@ -701,7 +731,7 @@ const DEF_PROMPTS={
 };
 function defaultPrompts(){
   const P={};
-  for(const k of ['wyr','whbSingle','roulette','adPhoto','blindRank','randomizer','reveal','bracket','duel','personEdit','pump1','pump2','pump3'])P[k]=DEF_PROMPTS[k].map(t=>({id:uid(),text:t}));
+  for(const k of ['wyr','whbSingle','roulette','adPhoto','blindRank','randomizer','reveal','bracket','duel','personEdit','feed','pump1','pump2','pump3'])P[k]=DEF_PROMPTS[k].map(t=>({id:uid(),text:t}));
   P.whbMulti=DEF_PROMPTS.whbMulti.map(([t,r])=>({id:uid(),text:t,req:r}));
   P.adMulti=DEF_PROMPTS.adMulti.map(([t,r,c])=>({id:uid(),text:t,req:r,cards:c}));
   return P;
@@ -896,12 +926,12 @@ function emptyMsg(text,showBtn=true){return h('div',{class:'empty'},h('div',{sty
 /* =========================================================
    Navigation
    ========================================================= */
-const TITLES={gallery:'Gallery',bracket:'Bracket',duel:'Split Screen Duel',pedit:'Person Edit',reveal:'Reveal',rand:'Randomizer',rank:'Blind Rank',pump:'Pump It',people:'People',person:'Person',home:'Template Maker',wyr:'Would You Rather',whb:'Who Has The Best',roul:'Roulette',player:'Roulette',media:'Media Pool',prompts:'Prompts',ads:'Ad Options',settings:'Settings & Backup'};
+const TITLES={feed:'For You',gallery:'Gallery',bracket:'Bracket',duel:'Split Screen Duel',pedit:'Person Edit',reveal:'Reveal',rand:'Randomizer',rank:'Blind Rank',pump:'Pump It',people:'People',person:'Person',home:'Template Maker',wyr:'Would You Rather',whb:'Who Has The Best',roul:'Roulette',player:'Roulette',media:'Media Pool',prompts:'Prompts',ads:'Ad Options',settings:'Settings & Backup'};
 const HOOKS={};
 const navStack=['home'];
 function cur(){return navStack[navStack.length-1]}
 function showScreen(name){
-  document.body.classList.toggle('gamemode',['wyr','whb','player','rank','reveal','bracket'].includes(name));
+  document.body.classList.toggle('gamemode',['wyr','whb','player','rank','reveal','bracket','feed'].includes(name));
   $$('.screen').forEach(s=>s.classList.toggle('on',s.id==='s-'+name));
   $('#title').textContent=TITLES[name]||'';
   $('#backBtn').style.visibility=name==='home'?'hidden':'visible';
@@ -1516,6 +1546,7 @@ const CAT_INFO={
   adPhoto:['Photo ad prompts','Text shown on photo pop-up ads.'],
   adMulti:['Card ad prompts (multiple choice)','“pick” = cards to select, “cards” = cards shown.'],
   blindRank:['Blind Rank prompts','Shown above the cards. The current person’s name appears in front of it.'],
+  feed:['For You captions','The caption shown under each post in the feed.'],
   bracket:['Bracket prompts','Shown above each matchup. The tapped person’s name appears in front of it.'],
   duel:['Split Screen Duel prompts','Shown with “name vs name” on each shot.'],
   personEdit:['Person Edit prompts','Shown on each shot, with the person’s name in front.'],
@@ -1533,9 +1564,9 @@ let promptsFocus=null;
 function openPrompts(which){promptsFocus=which;go('prompts')}
 HOOKS.prompts={show(){
   const b=$('#promptsBody');const f=promptsFocus;
-  const order={wyr:['wyr'],whb:['whbSingle','whbMulti'],roulette:['roulette'],ads:['adPhoto','adMulti'],rank:['blindRank'],pump:['pump1','pump2','pump3'],rand:['randomizer'],reveal:['reveal'],bracket:['bracket'],duel:['duel'],pedit:['personEdit']};
+  const order={wyr:['wyr'],whb:['whbSingle','whbMulti'],roulette:['roulette'],ads:['adPhoto','adMulti'],rank:['blindRank'],pump:['pump1','pump2','pump3'],rand:['randomizer'],reveal:['reveal'],bracket:['bracket'],duel:['duel'],pedit:['personEdit'],feed:['feed']};
   const first=f?order[f]:[];
-  const all=['wyr','whbSingle','whbMulti','blindRank','bracket','randomizer','reveal','duel','personEdit','roulette','pump1','pump2','pump3','adPhoto','adMulti'];
+  const all=['wyr','whbSingle','whbMulti','blindRank','bracket','randomizer','reveal','duel','personEdit','feed','roulette','pump1','pump2','pump3','adPhoto','adMulti'];
   const rest=all.filter(c=>!first.includes(c));
   b.replaceChildren(h('div',{class:'muted small',style:'margin:0 2px 12px'},'Everything saves automatically. Edit any prompt by tapping its text.'),
     ...first.map(c=>section(c,true)),...rest.map(c=>section(c,!f)));
@@ -1590,6 +1621,7 @@ HOOKS.home={show(){
       tile('🏆','Who Has The Best','2 / 4 / 6 photos',()=>{WHB.st=null;go('whb')},'big g3'),
       tile('🙈','Blind Rank',`Rank ${S.settings.rankN||5} people, no take-backs`,()=>{RANK.st=null;go('rank')},'big g4'),
       tile('💪','Pump It',`${S.settings.pumpDur||50}s slow → fast edit`,()=>go('pump'),'big g5'),
+      tile('📱','For You','A TikTok-style feed of your photos and clips',()=>go('feed'),'big g11'),
       tile('🏅','Bracket',`${S.settings.bracketN||8} people, one champion`,()=>{BRACKET.st=null;go('bracket')},'big g8'),
       tile('⚔️','Split Screen Duel',`${S.settings.duelLen||30}s of two-person duels`,()=>go('duel'),'big g9'),
       tile('🎞','Person Edit','Pick one person — a video of only them',()=>go('pedit'),'big g10'),
@@ -1840,6 +1872,130 @@ const BRACKET={st:null,busy:false,
   },
 };
 HOOKS.bracket={show(){if(!BRACKET.st)BRACKET.newGame();else{BRACKET.render();BRACKET.ctl()}},hide(){BRF.pause()}};
+
+/* =========================================================
+   For You — a TikTok-style feed. Swipe up for the next post.
+   Posts: photo · clip · clip + photo · clip + 2 photos · (rarely) 2 clips + a photo.
+   Two clips are NEVER shown together unless a photo is in the post too.
+   ========================================================= */
+const FEED={items:[],i:0,muted:false,busy:false,swipes:0,page:null,lastTypes:[],started:false,
+  wpick(opts){const sum=opts.reduce((a,o)=>a+o[1],0);let r=Math.random()*sum;for(const o of opts){r-=o[1];if(r<=0)return o[0]}return opts[0][0]},
+  gen(){
+    const nP=count('photo'),nC=readyClips().length;
+    const opts=[];
+    if(nP>=1)opts.push(['photo',20]);
+    if(nC>=1)opts.push(['clip',25]);
+    if(nC>=1&&nP>=1)opts.push(['clipphoto',30]);
+    if(nC>=1&&nP>=2)opts.push(['clip2photo',20]);
+    if(nC>=2&&nP>=1)opts.push(['2clipphoto',5]);
+    if(!opts.length)return null;
+    let type=this.wpick(opts);const L=this.lastTypes;
+    if(L.length>=2&&L[0]===type&&L[1]===type){const o2=opts.filter(o=>o[0]!==type);if(o2.length)type=this.wpick(o2)}
+    this.lastTypes=[type,L[0]].filter(Boolean);
+    const nPh={photo:1,clip:0,clipphoto:1,clip2photo:2,'2clipphoto':1}[type],nCl={photo:0,clip:1,clipphoto:1,clip2photo:1,'2clipphoto':2}[type];
+    const photos=nPh?takePhotos(nPh):[],clips=[];
+    const startOf=id=>{const d=(M(id)&&M(id).dur)||0;return d>4?rand(0,d-3):0};
+    for(let q=0;q<nCl;q++){
+      let id=null;
+      if(q===0&&photos.length&&Math.random()<.5){const pp=personOf(photos[0]);if(pp&&readyClipsOf(pp.id).length)id=personClip(pp.id,[])} // their own clip with their photo
+      if(!id)id=bags.clip.next(clips.map(c=>c.id));
+      clips.push({id,start:startOf(id)});
+    }
+    let layout='full';
+    if(type==='clipphoto')layout=Math.random()<.5?'stack2':'side2';
+    if(type==='clip2photo')layout=Math.random()<.5?'t12':'l12';
+    if(type==='2clipphoto')layout='stack3';
+    const pr=promptFrom('feed');
+    return {type,photos,clips,layout,text:pr?pr.text:''};
+  },
+  item(i){while(this.items.length<=i){const it=this.gen();if(!it)return null;this.items.push(it);if(this.items.length>80&&this.i>40){this.items.shift();this.i--;i--}}return this.items[i]},
+  ids(it){return [...it.photos,...it.clips.map(c=>c.id)]},
+  handle(it){const names=[...new Set(this.ids(it).map(personOf).filter(Boolean).map(p=>'@'+p.name.toLowerCase().replace(/[^a-z0-9]+/g,'')))];return names.length?names.join(' · '):'@template.maker'},
+  build(it){
+    const flips=[];
+    const page=h('div',{class:'fpage'});
+    // media: cells are shuffled but a big clip stays first in the 2-photo layouts
+    const cells=[];
+    it.clips.forEach((c,q)=>cells.push({t:'vid',id:c.id,start:c.start,sound:q===0}));
+    it.photos.forEach(id=>cells.push({t:'img',id}));
+    const order=(it.layout==='t12'||it.layout==='l12')?cells:shuffle(cells);
+    const lay=h('div',{class:'lay lay-'+it.layout});
+    order.forEach(c=>{
+      const slot=h('div',{class:'slot'});
+      if(c.t==='img'){const el=fitImg(c.id);if(it.type==='photo')el.classList.add('kb');slot.append(el)}
+      else{const f=new Flip();f.setClip(c.id);f._wantSound=c.sound;f.muted=!c.sound||this.muted;f.currentTime=c.start;f.play();flips.push(f);slot.append(VR.canvas(f,true))}
+      lay.append(slot);
+    });
+    page.append(lay);
+    const first=this.ids(it).map(personOf).find(Boolean);
+    const av=h('div',{class:'fav'});
+    const ph=first&&photosOf(first.id)[0];
+    if(ph)av.append(h('img',{src:ph.thumb||ph.url,alt:''}));else av.textContent='♪';
+    const likeI=h('i',null,'♥'),likeB=h('button',{class:'fbtn'},likeI,h('span',null,'Like'));
+    const sndI=h('i',null,this.muted?'🔇':'🔊'),sndB=h('button',{class:'fbtn'},sndI,h('span',null,'Sound'));
+    const edB=h('button',{class:'fbtn'},h('i',null,'✎'),h('span',null,'Captions'));
+    const paintLike=()=>likeB.classList.toggle('on',this.ids(it).some(isFav));
+    likeB.onclick=e=>{e.stopPropagation();this.like(it);paintLike()};
+    sndB.onclick=e=>{e.stopPropagation();this.muted=!this.muted;gvMuted=this.muted;sndI.textContent=this.muted?'🔇':'🔊';flips.forEach(f=>{f.muted=!f._wantSound||this.muted;if(PLAY.real&&f._wantSound&&!f.paused)f.play()})};
+    edB.onclick=e=>{e.stopPropagation();openPrompts('feed')};
+    ['pointerdown','touchstart','touchend','click'].forEach(ev=>[likeB,sndB,edB].forEach(b=>b.addEventListener(ev,e=>e.stopPropagation())));
+    paintLike();
+    const ui=h('div',{class:'fui'},h('div',{class:'fshade'}),h('div',{class:'ftop'},h('span',null,'Following'),h('b',null,'For You')),
+      h('div',{class:'fmeta'},h('div',{class:'fh'},this.handle(it)),h('div',{class:'fc'},it.text)),
+      h('div',{class:'fbar'},av,likeB,sndB,edB));
+    page.append(ui);
+    page._flips=flips;page._paint=paintLike;
+    return page;
+  },
+  like(it){const ids=this.ids(it);const on=ids.some(isFav);ids.forEach(id=>{if(on)delete S.favs[id];else S.favs[id]=true});markDirty()},
+  show(i,dir){
+    const stage=$('#feedStage');const it=this.item(i);if(!it){return}
+    const np=this.build(it),old=this.page;
+    this.i=i;this.page=np;
+    if(!old||!dir){stage.replaceChildren(np);this.busy=false;return}
+    this.busy=true;
+    np.style.transform=`translateY(${dir>0?100:-100}%)`;stage.append(np);void np.offsetHeight;
+    [old,np].forEach(x=>x.style.transition='transform .28s cubic-bezier(.2,.8,.2,1)');
+    old.style.transform=`translateY(${dir>0?-100:100}%)`;np.style.transform='translateY(0)';
+    old._flips.forEach(f=>f.pause());
+    setTimeout(()=>{old.remove();np.style.transition='';this.busy=false;
+      if(dir>0){this.swipes++;if(this.swipes%6===0)Ads.afterNext()}},300);
+  },
+  next(){if(this.busy||Ads.open)return;this.show(this.i+1,1)},
+  prev(){if(this.busy||Ads.open)return;if(this.i<=0){this.bounce();return}this.show(this.i-1,-1)},
+  bounce(){const pg=this.page;if(!pg||!pg.animate)return;pg.animate([{transform:'translateY(0)'},{transform:'translateY(36px)'},{transform:'translateY(0)'}],{duration:260,easing:'ease-out'})},
+  heart(x,y){const st=$('#feedStage');const r=st.getBoundingClientRect();st.append(h('div',{class:'fheart',style:`left:${x-r.left}px;top:${y-r.top}px`},'❤️'));setTimeout(()=>{const e=st.querySelector('.fheart');e&&e.remove()},850)},
+  togglePause(){
+    const pg=this.page;if(!pg)return;const st=$('#feedStage');
+    const ov=st.querySelector('.fpause');
+    if(ov){ov.remove();pg._flips.forEach(f=>f.play());pg._paused=false}
+    else{pg._flips.forEach(f=>f.pause());pg._paused=true;st.append(h('div',{class:'fpause'},'▶'))}
+  },
+  bind(){
+    const st=$('#feedStage');let sx=0,sy=0,t0=0,lastTap=0,tapT=null;
+    st.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;t0=Date.now()},{passive:true});
+    st.addEventListener('touchend',e=>{
+      if(cur()!=='feed'||Ads.open)return;const t=e.changedTouches[0];const dx=t.clientX-sx,dy=t.clientY-sy;
+      if(Math.abs(dy)>60&&Math.abs(dy)>Math.abs(dx)){dy<0?this.next():this.prev();return}
+      if(Math.abs(dx)<12&&Math.abs(dy)<12&&Date.now()-t0<400){
+        const now=Date.now();
+        if(now-lastTap<320){clearTimeout(tapT);lastTap=0;const it=this.items[this.i];if(it&&!this.ids(it).some(isFav)){this.like(it);this.page._paint&&this.page._paint()}this.heart(t.clientX,t.clientY)}
+        else{lastTap=now;tapT=setTimeout(()=>{if(cur()==='feed')this.togglePause()},330)}
+      }
+    },{passive:true});
+    st.addEventListener('click',e=>{if(e.pointerType==='touch'||e.sourceCapabilities&&e.sourceCapabilities.firesTouchEvents)return;if(e.target.closest('.fbtn'))return;this.togglePause()});
+    st.addEventListener('wheel',e=>{if(cur()!=='feed')return;if(Math.abs(e.deltaY)<20)return;e.preventDefault();e.deltaY>0?this.next():this.prev()},{passive:false});
+    document.addEventListener('keydown',e=>{if(cur()!=='feed')return;if(e.key==='ArrowDown'||e.key===' ')this.next();else if(e.key==='ArrowUp')this.prev()});
+  },
+  start(){
+    const stage=$('#feedStage');
+    if(!count('photo')&&!readyClips().length){stage.replaceChildren(emptyMsg('Add photos and clips to the Media Pool to fill your feed.'));return}
+    this.page=null;this.busy=false;
+    this.show(this.items.length?Math.min(this.i,this.items.length-1):0,0);
+  },
+};
+FEED.bind();
+HOOKS.feed={show(){FEED.start()},hide(){if(FEED.page)FEED.page._flips.forEach(f=>f.pause());$('#feedStage').replaceChildren();FEED.page=null}};
 
 /* =========================================================
    Reveal — a clip plays with a question; press Show to find out who it is
